@@ -21,7 +21,7 @@ For best experience view this file in a Markdown viewer. In addition to dedicate
 ## Table of Contents
 
 1. UNDERLAY CONFIG  
-[1.1 About ECMP and MTU](#ecmp-and-mtu)
+[1.1 About ECMP and MTU](#ecmp-and-mtu)  
 [1.1 IGP Routing Configuration](#igp-routing-config)  
 [1.2 Multicast Configuration](#multicast-configuration)  
 [1.4 MP-BGP Configuration](#mpbgp-configuration)  
@@ -63,7 +63,7 @@ For best experience view this file in a Markdown viewer. In addition to dedicate
 Due to MTU requirements in OSPF, this section is presented first so that the associated config will make sense in later examples.
 
 + Equal Cost Multi-Path is achieved by using a hash for souce UDP port.
-  + OSPF allows 4 equal cost paths by default. Can increase with "maximum-paths" command.
+  + OSPF allows equal cost paths by default (# of paths depends on platform). Can increase with "maximum-paths" command.
 + 50-byte overhead is added. Path MTU must reflect this. Fragmentation is **NOT** allowed.
 
 ```text
@@ -806,7 +806,7 @@ NX-01# show mac address-table dynamic
 
 #### Basic VXLAN EVPN Topology:
 
-![Basic VXLAN EVPN Topology](https://jeremiahwolfe.github.io/Networking-Docs/VXLAN_EVPN_NXOS/VSLAN-EVPN-BASIC.drawio.png)
+![Basic VXLAN EVPN Topology](https://jeremiahwolfe.github.io/Networking-Docs/VXLAN_EVPN_NXOS/VXLAN-EVPN-BASIC.drawio.png)
 
 <!-- TOC --><a name="nx-01-config"></a>
 
@@ -902,7 +902,7 @@ interface Ethernet1/5
 
 
 interface loopback0
-  description Loopback for iBGP
+  description Loopback for Control Plane Communication
   ip address 10.0.0.1/32
   ip router ospf UNDERLAY area 0.0.0.0
   ip pim sparse-mode
@@ -1050,7 +1050,7 @@ interface Ethernet1/5
   no shutdown
 
 interface loopback0
-  description Loopback for iBGP
+  description Loopback for Control Plane Communication
   ip address 10.0.0.2/32
   ip router ospf UNDERLAY area 0.0.0.0
   ip pim sparse-mode
@@ -1178,7 +1178,7 @@ interface Ethernet1/5
   no shutdown
 
 interface loopback0
-  description Loopback for iBGP
+  description Loopback for Control Plane Communication
   ip address 10.0.0.3/32
   ip router ospf UNDERLAY area 0.0.0.0
   ip pim sparse-mode
@@ -1269,7 +1269,7 @@ interface Ethernet1/3
 
 
 interface loopback0
-  description Loopback for iBGP
+  description Loopback for Control Plane Communication
   ip address 10.0.0.4/32
   ip router ospf UNDERLAY area 0.0.0.0
   ip pim sparse-mode
@@ -1351,7 +1351,7 @@ interface Ethernet1/3
   no shutdown
 
 interface loopback0
-  description Loopback for iBGP
+  description Loopback for Control Plane Communication
   ip address 10.0.0.5/32
   ip router ospf UNDERLAY area 0.0.0.0
   ip pim sparse-mode
