@@ -1,5 +1,5 @@
 
-# VXLAN EVPN on NX-OS
+# VXLAN EVPN on NX-OS (Basic)
 
 | Version | Edited  | Author | Notes |
 | --- | --- | --- | --- |
@@ -13,9 +13,8 @@ This document is intended to guide one through the **basic** configuration of VX
 
 For best experience view this file in a Markdown viewer. In addition to dedicated editor/viewers, most IDEs include markdown support. Additionally, web browser extensions are available.
 
-> ⚠️ **NOTE:**
-> The below syntax examples should work with **Nexus 7k** and **Nexus 9k** devices as of **NX-OS 10.2.7**.  
-> Nexus 5600 requires some additional syntax which will be noted inline.  
+> ⚠️ NOTE: The below syntax examples should work with **Nexus 7k** and **Nexus 9k** devices as of **NX-OS 10.2.7**.
+>Nexus 5600 requires some additional syntax which will be noted inline.
 
 ---
 
@@ -44,7 +43,7 @@ For best experience view this file in a Markdown viewer. In addition to dedicate
 [4.3 Additional DHCP Scenarios](#dhcp-additional)
 5. Verification and Troubleshooting  
 [5.1 Helpful Commands](#helpful-commands)  
-6. Complete VXLAN EVPN Template
+6. Complete VXLAN EVPN Example
 
 ---
 ---
@@ -791,3 +790,10 @@ NX-01# show mac address-table
 
 NX-01# show mac address-table dynamic
 ```
+
+---
+---
+
+## Complete VXLAN EVPN Example
+
+![Basic VXLAN EVPN Topology](https://jeremiahwolfe.github.io/Networking-Docs/)
