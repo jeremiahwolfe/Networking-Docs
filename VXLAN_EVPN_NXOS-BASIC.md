@@ -44,11 +44,11 @@ For best experience view this file in a Markdown viewer. In addition to dedicate
 5. Verification and Troubleshooting  
 [5.1 Helpful Commands](#helpful-commands)  
 6. Complete VXLAN EVPN Example  
-[6.1 VXLAN EVPN Basic Topology](#basic-topology)
-[6.2 NX-01 Config](#nx-01-config)
-[6.2 NX-02 Config](#nx-02-config)
-[6.2 NX-03 Config](#nx-03-config)
-[6.2 NX-04 Config](#nx-04-config)
+[6.1 VXLAN EVPN Basic Topology](#basic-topology)  
+[6.2 NX-01 Config](#nx-01-config)  
+[6.2 NX-02 Config](#nx-02-config)  
+[6.2 NX-03 Config](#nx-03-config)  
+[6.2 NX-04 Config](#nx-04-config)  
 [6.2 NX-05 Config](#nx-05-config)
 
 ---
