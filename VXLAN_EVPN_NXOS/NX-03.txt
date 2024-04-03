@@ -1,0 +1,113 @@
+
+NX-03#
+
+hostname NX-03
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature fabric forwarding
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+
+fabric forwarding anycast-gateway-mac 0020.0000.1234
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+vlan 1,20,500,510
+vlan 20
+  vn-segment 100020
+vlan 500
+  vn-segment 50000
+
+route-map REDIST permit 10
+  match tag 67696 
+vrf context WOLFECO
+  vni 50000
+  ip pim ssm range 232.0.0.0/8
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+
+interface Vlan20
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.20.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan500
+  no shutdown
+  vrf member WOLFECO
+  no ip redirects
+  ip forward
+
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 50000 associate-vrf
+  member vni 100020 mcast-group 239.0.0.20
+
+interface Ethernet1/1
+  description Link to VLAN20 Client
+  switchport access vlan 20
+
+interface Ethernet1/4
+  description Link to NX-04 Eth1/3
+  no switchport
+  mtu 9150
+  ip address 10.1.34.3/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/5
+  description Link to NX-05 Eth1/3
+  no switchport
+  mtu 9150
+  ip address 10.1.35.3/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.3/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+icam monitor scale
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 3.3.3.3
+  neighbor 10.0.0.4
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.5
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  vrf WOLFECO
+    address-family ipv4 unicast
+      redistribute direct route-map REDIST
+evpn
+  vni 100020 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+
+
+NX-03#  

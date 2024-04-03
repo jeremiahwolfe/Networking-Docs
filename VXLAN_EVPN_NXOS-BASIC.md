@@ -43,7 +43,13 @@ For best experience view this file in a Markdown viewer. In addition to dedicate
 [4.3 Additional DHCP Scenarios](#dhcp-additional)
 5. Verification and Troubleshooting  
 [5.1 Helpful Commands](#helpful-commands)  
-6. Complete VXLAN EVPN Example
+6. Complete VXLAN EVPN Example  
+[6.1 VXLAN EVPN Basic Topology](#basic-topology)
+[6.2 NX-01 Config](#nx-01-config)
+[6.2 NX-02 Config](#nx-02-config)
+[6.2 NX-03 Config](#nx-03-config)
+[6.2 NX-04 Config](#nx-04-config)
+[6.2 NX-05 Config](#nx-05-config)
 
 ---
 ---
@@ -796,4 +802,587 @@ NX-01# show mac address-table dynamic
 
 ## Complete VXLAN EVPN Example
 
-![Basic VXLAN EVPN Topology](https://jeremiahwolfe.github.io/Networking-Docs/)
+<!-- TOC --><a name="basic-topology"></a>
+
+#### Basic VXLAN EVPN Topology:
+
+![Basic VXLAN EVPN Topology](https://jeremiahwolfe.github.io/Networking-Docs/VXLAN_EVPN_NXOS/VSLAN-EVPN-BASIC.drawio.png)
+
+<!-- TOC --><a name="nx-01-config"></a>
+
+```text
+6.2 NX-01 Config
+================
+
+NX-01#
+
+hostname NX-01
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature fabric forwarding
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+
+fabric forwarding anycast-gateway-mac 0020.0000.1234
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+vlan 1,10,500
+vlan 10
+  vn-segment 100010
+vlan 500
+  vn-segment 50000
+
+route-map REDIST permit 10
+  match tag 67696 
+
+vrf context WOLFECO
+  vni 50000
+  ip pim ssm range 232.0.0.0/8
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+
+interface Vlan10
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.10.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan500
+  no shutdown
+  vrf member WOLFECO
+  ip forward
+
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 50000 associate-vrf
+  member vni 100010 mcast-group 239.0.0.10
+
+interface Ethernet1/1
+  description Link to VLAN10 Client
+  switchport access vlan 10
+
+interface Ethernet1/2
+  description Link to VLAN10 Client
+  switchport access vlan 10
+
+interface Ethernet1/3
+  shutdown
+
+interface Ethernet1/4
+  description Uplink to NX-4 Eth1/1
+  no switchport
+  mtu 9150
+  ip address 10.1.14.1/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/5
+  description Uplink to NX-5 Eth1/1
+  no switchport
+  mtu 9150
+  ip address 10.1.15.1/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.1/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 1.1.1.1
+  neighbor 10.0.0.4
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.5
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  vrf WOLFECO
+    address-family ipv4 unicast
+      redistribute direct route-map REDIST
+evpn
+  vni 100010 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+
+NX-01#
+```
+
+<!-- TOC --><a name="nx-02-config"></a>
+
+```text
+6.2 NX-02 Config
+================
+
+NX-02#
+
+hostname NX-02
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature fabric forwarding
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+
+fabric forwarding anycast-gateway-mac 0020.0000.1234
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+vlan 1,10,20,40,500
+vlan 10
+  vn-segment 100010
+vlan 20
+  vn-segment 100020
+vlan 40
+  vn-segment 100040
+vlan 500
+  vn-segment 50000
+
+route-map REDIST permit 10
+  match tag 67696 
+vrf context WOLFECO
+  vni 50000
+  ip pim ssm range 232.0.0.0/8
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+
+interface Vlan10
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.10.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan20
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.20.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan40
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.40.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan500
+  no shutdown
+  vrf member WOLFECO
+  no ip redirects
+  ip forward
+
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 50000 associate-vrf
+  member vni 100010 mcast-group 239.0.0.10
+  member vni 100020 mcast-group 239.0.0.20
+  member vni 100040 mcast-group 239.0.0.40
+
+interface Ethernet1/1
+  description Link to VLAN10 Client
+  switchport access vlan 10
+
+interface Ethernet1/2
+  description Link to VLAN20 Client
+  switchport access vlan 20
+
+interface Ethernet1/3
+  description Link to Downstream Switch with Multiple Clients
+  switchport mode trunk
+
+interface Ethernet1/4
+  description Link to NX-04 Eth1/2
+  no switchport
+  mtu 9150
+  ip address 10.1.24.2/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/5
+  description Link to NX-05 Eth1/2
+  no switchport
+  mtu 9150
+  ip address 10.1.25.2/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.2/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+icam monitor scale
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 2.2.2.2
+  neighbor 10.0.0.4
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.5
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  vrf WOLFECO
+    address-family ipv4 unicast
+      redistribute direct route-map REDIST
+evpn
+  vni 100010 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+  vni 100020 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+  vni 100040 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+
+
+NX-02#      
+```
+
+<!-- TOC --><a name="nx-03-config"></a>
+
+```text
+6.2 NX-03 Config
+================
+
+NX-03#
+
+hostname NX-03
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature fabric forwarding
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+
+fabric forwarding anycast-gateway-mac 0020.0000.1234
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+vlan 1,20,500,510
+vlan 20
+  vn-segment 100020
+vlan 500
+  vn-segment 50000
+
+route-map REDIST permit 10
+  match tag 67696 
+vrf context WOLFECO
+  vni 50000
+  ip pim ssm range 232.0.0.0/8
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+
+interface Vlan20
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.20.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan500
+  no shutdown
+  vrf member WOLFECO
+  no ip redirects
+  ip forward
+
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 50000 associate-vrf
+  member vni 100020 mcast-group 239.0.0.20
+
+interface Ethernet1/1
+  description Link to VLAN20 Client
+  switchport access vlan 20
+
+interface Ethernet1/4
+  description Link to NX-04 Eth1/3
+  no switchport
+  mtu 9150
+  ip address 10.1.34.3/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/5
+  description Link to NX-05 Eth1/3
+  no switchport
+  mtu 9150
+  ip address 10.1.35.3/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.3/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 3.3.3.3
+  neighbor 10.0.0.4
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.5
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  vrf WOLFECO
+    address-family ipv4 unicast
+      redistribute direct route-map REDIST
+evpn
+  vni 100020 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+
+
+NX-03#  
+```
+
+<!-- TOC --><a name="nx-04-config"></a>
+
+```text
+6.2 NX-04 Config
+================
+
+NX-04#
+
+hostname NX-04
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature nv overlay
+
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+ip pim anycast-rp 10.4.5.10 10.0.0.4
+ip pim anycast-rp 10.4.5.10 10.0.0.5
+
+interface Ethernet1/1
+  description Link to NX-01 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.14.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/2
+  description Link to NX-02 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.24.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/3
+  description Link to NX-03 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.34.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.4/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+interface loopback1
+  description Loopback for PIM RP
+  ip address 10.4.5.10/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 4.4.4.4
+  neighbor 10.0.0.0/16
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community extended
+      route-reflector-client
+
+
+NX-04#          
+```
+
+<!-- TOC --><a name="nx-05-config"></a>
+
+```text
+6.2 NX-05 Config
+================
+
+NX-05#
+
+hostname NX-05
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature nv overlay
+
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+ip pim anycast-rp 10.4.5.10 10.0.0.4
+ip pim anycast-rp 10.4.5.10 10.0.0.5
+
+vrf context management
+
+interface Ethernet1/1
+  description Link to NX-01 Eth1/5
+  no switchport
+  mtu 9150
+  ip address 10.1.15.5/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/2
+  description Link to NX-02 Eth1/5
+  no switchport
+  mtu 9150
+  ip address 10.1.25.5/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/3
+  description Link to NX-03 Eth1/5
+  no switchport
+  mtu 9150
+  ip address 10.1.35.5/29
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.5/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+interface loopback1
+  description Loopback for PIM RP
+  ip address 10.4.5.10/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+ 
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 4.4.4.4
+  neighbor 10.0.0.0/16
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community extended
+      route-reflector-client
+  neighbor 10.1.0.0/24
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community extended
+      route-reflector-client
+
+
+NX-05#             
+```
+
+### End of Document

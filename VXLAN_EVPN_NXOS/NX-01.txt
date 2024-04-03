@@ -1,0 +1,120 @@
+NX-01#
+
+hostname NX-01
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature fabric forwarding
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+
+fabric forwarding anycast-gateway-mac 0020.0000.1234
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+vlan 1,10,500
+vlan 10
+  vn-segment 100010
+vlan 500
+  vn-segment 50000
+
+route-map REDIST permit 10
+  match tag 67696 
+
+vrf context WOLFECO
+  vni 50000
+  ip pim ssm range 232.0.0.0/8
+  rd auto
+  address-family ipv4 unicast
+    route-target both auto
+    route-target both auto evpn
+
+interface Vlan10
+  no shutdown
+  mtu 9150
+  vrf member WOLFECO
+  ip address 192.168.10.254/24 tag 67696
+  ip pim sparse-mode
+  fabric forwarding mode anycast-gateway
+
+interface Vlan500
+  no shutdown
+  vrf member WOLFECO
+  ip forward
+
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 50000 associate-vrf
+  member vni 100010 mcast-group 239.0.0.10
+
+interface Ethernet1/1
+  description Link to VLAN10 Client
+  switchport access vlan 10
+
+interface Ethernet1/2
+  description Link to VLAN10 Client
+  switchport access vlan 10
+
+interface Ethernet1/3
+  shutdown
+
+interface Ethernet1/4
+  description Uplink to NX-4 Eth1/1
+  no switchport
+  mtu 9150
+  ip address 10.1.14.1/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/5
+  description Uplink to NX-5 Eth1/1
+  no switchport
+  mtu 9150
+  ip address 10.1.15.1/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.1/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 1.1.1.1
+  neighbor 10.0.0.4
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.0.0.5
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  vrf WOLFECO
+    address-family ipv4 unicast
+      redistribute direct route-map REDIST
+evpn
+  vni 100010 l2
+    rd auto
+    route-target import auto
+    route-target export auto
+
+NX-01#

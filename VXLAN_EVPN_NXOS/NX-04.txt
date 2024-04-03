@@ -1,0 +1,76 @@
+NX-04#
+
+hostname NX-04
+
+nv overlay evpn
+feature ospf
+feature bgp
+feature pim
+feature nv overlay
+
+ip pim rp-address 10.4.5.10 group-list 224.0.0.0/4
+ip pim ssm range 232.0.0.0/8
+ip pim anycast-rp 10.4.5.10 10.0.0.4
+ip pim anycast-rp 10.4.5.10 10.0.0.5
+
+interface Ethernet1/1
+  description Link to NX-01 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.14.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/2
+  description Link to NX-02 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.24.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+interface Ethernet1/3
+  description Link to NX-03 Eth1/4
+  no switchport
+  mtu 9150
+  ip address 10.1.34.4/29
+  ip ospf cost 4
+  ip ospf network point-to-point
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+  no shutdown
+
+
+interface loopback0
+  description Loopback for iBGP
+  ip address 10.0.0.4/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+interface loopback1
+  description Loopback for PIM RP
+  ip address 10.4.5.10/32
+  ip router ospf UNDERLAY area 0.0.0.0
+  ip pim sparse-mode
+
+
+cli alias name wr copy run start
+
+router ospf UNDERLAY
+router bgp 65000
+  router-id 4.4.4.4
+  neighbor 10.0.0.0/16
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community extended
+      route-reflector-client
+
+
+NX-04#          
