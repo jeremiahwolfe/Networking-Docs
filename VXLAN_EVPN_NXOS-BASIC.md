@@ -13,9 +13,6 @@ This document is intended to guide one through the **basic** configuration of VX
 
 For best experience view this file in a Markdown viewer. In addition to dedicated editor/viewers, most IDEs include markdown support. Additionally, web browser extensions are available.
 
-> ⚠️ NOTE: The below syntax examples should work with **Nexus 7k** and **Nexus 9k** devices as of **NX-OS 10.2.7**.
->Nexus 5600 requires some additional syntax which will be noted inline.
-
 ---
 
 ## Table of Contents
