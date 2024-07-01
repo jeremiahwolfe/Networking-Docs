@@ -44,9 +44,9 @@ Some older aspects will be omitted as they are long obsolete.
 
 10. DMVPN over MPLS
 
-11. DMVPN IPSec with IKEv1
+[11. DMVPN IPSec with IKEv1](#ipsec_ikev1_configuration)  
 
-12. DMVPN IPsec with IKEv2
+[12. DMVPN IPSec with IKEv2](#ipsec_ikev2_configuration)  
 
 13. DMVPN Front Door VRF
 
@@ -716,6 +716,8 @@ show ip bgp
 
 ## 10. DMVPN over MPLS
 
+<!-- TOC --><a name="ipsec_ikev1_configuration"></a>
+
 ## 11. DMVPN IPSec with IKEv1
 
 ```
@@ -782,6 +784,9 @@ interface Tunnel1
   tunnel protection ipsec profile DMVPN
 
 ```
+
+<!-- TOC --><a name="ipsec_ikev2_configuration"></a>
+
 ## 12. DMVPN IPsec with IKEv2
 
 ```
